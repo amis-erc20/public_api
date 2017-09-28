@@ -8,7 +8,13 @@ RUN apt-get -y install git supervisor nginx nodejs
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN echo 55 && git clone --recursive https://github.com/etherdelta/public_api.git
+# SSH keys nonsense
+RUN echo "IdentityFile ~/.ssh/id_rsa" >> /etc/ssh/ssh_config
+RUN mkdir /root/.ssh
+RUN ssh-keyscan -t rsa github.com 2>&1 >> /root/.ssh/known_hosts
+
+
+RUN echo 55 && git clone --recursive https://github.com/bingoko/public_api.git
 RUN cd /public_api && npm install
 RUN cd /public_api/etherdelta.github.io && npm install
 ADD config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
