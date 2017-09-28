@@ -14,7 +14,7 @@ RUN mkdir /root/.ssh
 RUN ssh-keyscan -t rsa github.com 2>&1 >> /root/.ssh/known_hosts
 
 
-RUN echo 55 && git clone --recursive https://github.com/bingoko/public_api.git
+RUN echo 55 && git clone --recursive https://github.com/johndpope/public_api.git
 RUN cd /public_api && npm install
 RUN cd /public_api/etherdelta.github.io && npm install
 ADD config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
