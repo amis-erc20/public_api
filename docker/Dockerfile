@@ -10,7 +10,7 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
 
-RUN apt-get update && apt-get -y install openssh-server supervisor unzip
+RUN apt-get update && apt-get -y install openssh-server supervisor unzip npm nodejs
 RUN mkdir /var/run/sshd
 RUN echo 'root:alpine' | chpasswd
 RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config
@@ -31,10 +31,42 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-RUN mkdir -p /var/log/supervisor
+
+# Run updates
+RUN apt-get update --fix-missing && apt-get install -y
+
+# Install Curl
+RUN apt-get install curl -y 
+
+
+# Install supervisor
+RUN apt-get install python  nginx  -y
+RUN curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
+RUN python get-pip.py
+RUN pip install supervisor
+
+# Start the supervisor instance when the machine autostarts
+RUN echo "supervisord -c /etc/supervisord.conf" >> /root/.bashrc
+
+# Copy config file for Supervisor (Custom supervisord.conf)
+# see https://gist.github.com/johndpope/01a74ffb93921df48e334097117be1b3 for actual file.   supervisord.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 
+ENV NVM_DIR /usr/local/nvm
+ENV NODE_VERSION 8.6.0
+
+SHELL ["/bin/bash", "-c"]
+# Install nvm with node and npm
+RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash \
+    && source $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+
+# Set up our PATH correctly so we don't have to long-reference npm, node, &c.
+ENV NODE_PATH $NVM_DIR/versions/node/v$NODE_VERSION/lib/node_modules
+ENV PATH      $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 
 RUN echo 55 && git clone --recursive https://github.com/johndpope/public_api.git
 RUN cd /public_api && npm install

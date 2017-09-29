@@ -1,1 +1,1 @@
-docker build -t etherdelta/api -f Dockerfile .
+docker build -t swift4-ssh -f Dockerfile . 
